@@ -326,7 +326,7 @@ router.put('/:catalog_id/:room_id', authMiddleware, adminOnly, validate(updateRo
         const result = await Room.findOneAndUpdate(
             { catalog_id, room_id },
             { room_name, capacity, location, amenities, status, floor_no, room_number, availability, image_url, image_urls },
-            { new: true } // Return updated document
+            { returnDocument: 'after' } // Return updated document
         );
         if (!result) {
             return res.status(404).json({ error: 'Room not found.' });
