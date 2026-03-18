@@ -156,6 +156,7 @@ router.get('/all', authMiddleware, async (req, res) => {
                 ...b,
                 user_name: user?.name || 'User',
                 email: user?.email || '',
+                phone_no: user?.phone_no || '',
                 room_name: room?.room_name || 'Room',
                 location: room?.location || '',
                 floor_no: room?.floor_no || null,
