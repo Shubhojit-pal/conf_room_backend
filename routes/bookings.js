@@ -422,12 +422,38 @@ router.post('/', authMiddleware, validate(createBookingSchema), async (req, res)
         const roomObj = await Room.findOne({ catalog_id, room_id }).lean();
         if (!roomObj) return res.status(404).json({ error: 'Room not found.' });
 
-        // Validate attendee count
         const attendeeCount = parseInt(attendees) || 1;
         if (attendeeCount > roomObj.capacity) {
             return res.status(400).json({ 
                 error: `Attendees exceed room capacity (${roomObj.capacity}).` 
             });
+        }
+
+        // ┌─────────────────────────────────────────────────────┐
+        // │ NEW VALIDATIONS: 6 MONTH LIMIT & 180 DAY MAX       │
+        // └─────────────────────────────────────────────────────┘
+        const now = new Date();
+        const maxFutureDate = new Date();
+        maxFutureDate.setMonth(now.getMonth() + 6);
+        const maxFutureStr = maxFutureDate.toISOString().slice(0, 10);
+
+        // helper to validate a single date string
+        const isTooFar = (d) => d > maxFutureStr;
+
+        if (per_date_choices && Array.isArray(per_date_choices)) {
+            if (per_date_choices.length > 180) {
+                return res.status(400).json({ error: 'A single booking cannot exceed 180 dates.' });
+            }
+            const tooFar = per_date_choices.some(c => isTooFar(c.date));
+            if (tooFar) {
+                return res.status(400).json({ error: 'Bookings are only allowed up to 6 months in advance.' });
+            }
+        } else if (start_date && end_date) {
+            if (isTooFar(end_date)) {
+                return res.status(400).json({ error: 'Bookings are only allowed up to 6 months in advance.' });
+            }
+            // For range-based, activeDates list is calculated later, but we can check the count here too
+            // though most range bookings use the activeDates logic.
         }
 
         // ┌─────────────────────────────────────────────────────┐
@@ -573,6 +599,10 @@ router.post('/', authMiddleware, validate(createBookingSchema), async (req, res)
                 }
                 return days;
             })();
+
+        if (activeDates.length > 180) {
+            return res.status(400).json({ error: 'A single booking cannot exceed 180 dates.' });
+        }
 
         // Check for conflicts on each date
         for (const date of activeDates) {
