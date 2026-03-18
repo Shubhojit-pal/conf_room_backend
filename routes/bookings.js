@@ -107,13 +107,14 @@ router.get('/', authMiddleware, adminOnly, async (req, res) => {
 
         // Enrich with user, room, and ticket information
         const enriched = await Promise.all(bookings.map(async (b) => {
-            const user = await User.findOne({ uid: b.uid }).select('name email').lean();
+            const user = await User.findOne({ uid: b.uid }).select('name email phone_no').lean();
             const room = await Room.findOne({ catalog_id: b.catalog_id, room_id: b.room_id }).select('room_name mapLink').lean();
             const ticket = await Ticket.findOne({ booking_id: b.booking_id }).select('ticket_id').lean();
             return {
                 ...b,
                 user_name: user?.name || '',
                 email: user?.email || '',
+                phone_no: user?.phone_no || '',
                 room_name: room?.room_name || '',
                 mapLink: room?.mapLink || '',
                 ticket_id: ticket?.ticket_id || null,
@@ -146,7 +147,7 @@ router.get('/all', authMiddleware, async (req, res) => {
 
         // Enrich with user and room information
         const enriched = await Promise.all(bookings.map(async (b) => {
-            const user = await User.findOne({ uid: b.uid }).select('name email').lean();
+            const user = await User.findOne({ uid: b.uid }).select('name email phone_no').lean();
             const room = await Room.findOne({ catalog_id: b.catalog_id, room_id: b.room_id })
                 .select('room_name location floor_no mapLink')
                 .lean();
@@ -225,7 +226,7 @@ router.get('/user/:uid', authMiddleware, async (req, res) => {
             const room = await Room.findOne({ catalog_id: b.catalog_id, room_id: b.room_id })
                 .select('room_name location floor_no mapLink')
                 .lean();
-            const user = await User.findOne({ uid: b.uid }).select('name email').lean();
+            const user = await User.findOne({ uid: b.uid }).select('name email phone_no').lean();
             const ticket = await Ticket.findOne({ booking_id: b.booking_id }).select('ticket_id').lean();
             return {
                 ...b,
@@ -235,6 +236,7 @@ router.get('/user/:uid', authMiddleware, async (req, res) => {
                 mapLink: room?.mapLink || '',
                 user_name: user?.name || '',
                 email: user?.email || '',
+                phone_no: user?.phone_no || '',
                 ticket_id: ticket?.ticket_id || null,
             };
         }));
