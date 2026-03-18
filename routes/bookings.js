@@ -102,8 +102,8 @@ async function getNextBookingId() {
  */
 router.get('/', authMiddleware, adminOnly, async (req, res) => {
     try {
-        // Fetch all bookings, most recent first
-        const bookings = await Booking.find().sort({ start_date: -1, start_time: -1 }).lean();
+        // Fetch all bookings, most recent booking first (by booking ID)
+        const bookings = await Booking.find().sort({ booking_id: -1 }).lean();
 
         // Enrich with user, room, and ticket information
         const enriched = await Promise.all(bookings.map(async (b) => {
@@ -142,7 +142,7 @@ router.get('/all', authMiddleware, async (req, res) => {
     try {
         // Fetch all non-cancelled bookings
         const bookings = await Booking.find({ status: { $ne: 'cancelled' } })
-            .sort({ start_date: -1, start_time: -1 })
+            .sort({ booking_id: -1 })
             .lean();
 
         // Enrich with user and room information
