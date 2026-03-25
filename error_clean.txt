@@ -1,0 +1,38 @@
+﻿node : C:\Users\SHUBHOJIT PAL\IEMRF\Con
+ference-Room-Booking-System-main\backen
+d\server.js:209
+At line:1 char:1
++ node server.js 2> error.log
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpeci 
+   fied: (C:\Users\SHUBHO...d\server.  
+  js:209:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCo 
+   mmandError
+ 
+/
+ 
+
+SyntaxError: Invalid or unexpected 
+token
+    at wrapSafe (node:internal/modules/
+cjs/loader:1735:18)
+    at Module._compile (node:internal/m
+odules/cjs/loader:1778:20)
+    at Object..js (node:internal/module
+s/cjs/loader:1936:10)
+    at Module.load (node:internal/modul
+es/cjs/loader:1525:32)
+    at Module._load (node:internal/modu
+les/cjs/loader:1327:12)
+    at TracingChannel.traceSync 
+(node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/mo
+dules/cjs/loader:245:24)
+    at Module.executeUserEntryPoint 
+[as runMain] 
+(node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_modu
+le:33:47
+
+Node.js v24.13.1

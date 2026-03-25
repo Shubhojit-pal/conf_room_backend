@@ -142,6 +142,15 @@ const roomSchema = new mongoose.Schema({
      * Example: "https://maps.google.com/?q=22.5726,88.3639"
      */
     mapLink: { type: String },
+
+    /**
+     * location_id: References the Location document for this room.
+     * Used for access-control — location_admin can only manage rooms
+     * whose location_id is in their assigned_locations array.
+     * Example: "L-01", "L-02"
+     */
+    location_id: { type: String },
+
     /**
      * layout: Visual room layout data designed by admin
      * Type: Mixed (JSON object containing grid elements)
