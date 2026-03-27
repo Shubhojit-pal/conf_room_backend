@@ -17,6 +17,7 @@ const roomSchema = z.object({
     image_urls: z.array(z.string()).optional(),
     mapLink: z.string().url().optional().or(z.literal('')),
     layout: z.any().optional(),
+    policy_pdf: z.string().optional(),
 });
 
 const updateRoomSchema = roomSchema.partial();

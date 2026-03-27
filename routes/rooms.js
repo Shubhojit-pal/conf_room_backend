@@ -33,6 +33,7 @@ const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
+const fs = require('fs');
 const { validate } = require('../middleware/validate');
 const { roomSchema, updateRoomSchema } = require('../schemas/room');
 const jwt = require('jsonwebtoken');
@@ -70,6 +71,30 @@ const storage = new CloudinaryStorage({
 const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+// ── PDF upload (local disk storage) ──────────────────────────────────────────
+const pdfUploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(pdfUploadsDir)) fs.mkdirSync(pdfUploadsDir, { recursive: true });
+
+const pdfStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, pdfUploadsDir),
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'policy-' + uniqueSuffix + '.pdf');
+    },
+});
+
+const uploadPdf = multer({
+    storage: pdfStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for PDFs
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only PDF files are allowed.'));
+        }
+    },
 });
 
 const router = express.Router();
@@ -132,6 +157,27 @@ router.post('/upload-images', adminAuthMiddleware, anyAdminOnly, upload.array('i
         res.json({ imageUrls });
     } catch (error) {
         console.error('Error uploading images:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+/**
+ * POST /api/rooms/upload-policy (ADMIN ONLY)
+ *
+ * Purpose: Upload a room's booking policy PDF to the server's uploads/ directory.
+ *
+ * Request: multipart/form-data with field name "policy"
+ * Success Response (200): { pdfUrl: "/uploads/policy-<timestamp>.pdf" }
+ */
+router.post('/upload-policy', adminAuthMiddleware, anyAdminOnly, uploadPdf.single('policy'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No PDF file uploaded.' });
+        }
+        const pdfUrl = `/uploads/${req.file.filename}`;
+        res.json({ pdfUrl });
+    } catch (error) {
+        console.error('Error uploading policy PDF:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -275,7 +321,7 @@ router.post(
     async (req, res) => {
     const { 
         catalog_id, room_id, room_name, capacity, location, amenities, 
-        status, floor_no, room_number, availability, image_url, image_urls, mapLink, layout, location_id
+        status, floor_no, room_number, availability, image_url, image_urls, mapLink, layout, location_id, room_type, policy_pdf
     } = req.body;
 
     try {
@@ -296,6 +342,8 @@ router.post(
             layout: layout || null,
             availability: availability || 'available',
             location_id,
+            room_type,
+            policy_pdf,
         });
         res.status(201).json({ 
             message: 'Room added successfully.', 
@@ -345,7 +393,7 @@ router.put(
     const { catalog_id, room_id } = req.params;
     const { 
         room_name, capacity, location, amenities, status, 
-        floor_no, room_number, availability, image_url, image_urls, mapLink, layout, location_id
+        floor_no, room_number, availability, image_url, image_urls, mapLink, layout, location_id, room_type, policy_pdf
     } = req.body;
 
     // For location_admin, validate they own the room's location
@@ -361,7 +409,7 @@ router.put(
         // Find and update room, returning updated document
         const result = await Room.findOneAndUpdate(
             { catalog_id, room_id },
-            { room_name, capacity, location, amenities, status, floor_no, room_number, availability, image_url, image_urls, mapLink, layout, location_id },
+            { room_name, capacity, location, amenities, status, floor_no, room_number, availability, image_url, image_urls, mapLink, layout, location_id, room_type, policy_pdf },
             { returnDocument: 'after' }
         );
         if (!result) {

@@ -206,3 +206,4 @@ connectDB().then(() => {
         console.log('   Routes: /api/auth | /api/rooms | /api/bookings | /api/users | /api/cancellations | /api/notifications');
     });
 });
+// Restart trigger

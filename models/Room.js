@@ -158,6 +158,13 @@ const roomSchema = new mongoose.Schema({
      * If null, no layout is configured for this room.
      */
     layout: { type: mongoose.Schema.Types.Mixed, default: null },
+
+    /**
+     * policy_pdf: URL or local path to the room's booking policy PDF
+     * Type: String
+     * Example: "/uploads/policy-room-R-01.pdf"
+     */
+    policy_pdf: { type: String },
 }, { timestamps: true }); // Auto-add createdAt and updatedAt fields
 
 // ┌─────────────────────────────────────────────────────────────────────────┐
